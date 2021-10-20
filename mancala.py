@@ -14,7 +14,7 @@ class Mancala:
 
     def get_next(self,index,player):
         """
-            index: (2,) current index of state, (0,0) for store_1, (1,p) or store_2
+            index: (2,) current index of state, (0,0) for store_1, (1,p) for store_2
             player: 1 or 2, indicating which player is moving 
         """
         row = index[0]
@@ -42,7 +42,17 @@ class Mancala:
                 else:
                     return (row, column + 1)
 
+    def _is_store(self,position):
+        return True if position == (0,0) or position == (1,self.pits) else False
+
+    def _get_store(self,player):
+        return (0,0) if player == 1 else (1,self.pits)
+            
+
     def sow(self, position, player):
+        if player == 2:
+            position -= 1
+
         current = (player-1, position)
         remaining = self.state[current]
         self.state[current] = 0
@@ -50,7 +60,15 @@ class Mancala:
             current = self.get_next(current,player)
             self.state[current] += 1 
             remaining -= 1
-
+        # Can take a free turn?
+        if self._is_store(current):
+            return player
+        # Can capture?
+        if self.state[current] == 0:
+            self.state[self._get_store(player)] += self.state[1 - current[0], current[1]]
+            self.state[1 - current[0], current[1]] = 0
+        
+        return 3-player
 
     def print(self):
         # First row
@@ -63,15 +81,17 @@ class Mancala:
         for i in range(self.pits):
             temp += "|{:>5d}|"
         temp += " -{:>5d}"
-        print(temp.format(*list(self.state[1])))
+        print('\033[95m'+temp.format(*list(self.state[1]))+'\033[0m')
 
 if __name__ =='__main__':
     m = Mancala()
 
     # m.print()
-    m.sow(1,1)
-    m.sow(2,2)
-    m.print()
+    player = 1
+    while True:
+        action = int(input("Player %d's turn:\n" % player))
+        player = m.sow(action,player)
+        m.print()
     # print(m.get_next([1,6],2))
 
 
