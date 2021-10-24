@@ -58,37 +58,45 @@ class Mancala:
         return (row,col)
             
 
-    def sow(self, position, player):
+    def sow(self, position, player,state = None):
+        if state is None:
+            state = self.state.copy()
+
         if not (1 <= position <= self.pits):
-            print("Invalid move. Try again.")
-            return player
+            print("Invalid move. Position should be in 1 to %d. Please try again." % self.pits)
+            return state, player
 
         if player == 2:
             position -= 1
 
         current = (player-1, position)
-        remaining = self.state[current]
+        remaining = state[current]
         if remaining == 0:
             print("Invalid move. Try again.")
-            return player
+            print(position, player)
+            self.print(state)
+            return state, player
 
-        self.state[current] = 0
+        state[current] = 0
         while remaining>0:
             current = self.get_next(current,player)
-            self.state[current] += 1 
+            state[current] += 1 
             remaining -= 1
         # Can take a free turn?
         if self._is_store(current):
-            return player
+            return state, player
         # Can capture?
-        if self.state[current] == 1 and current[0] == player-1:
-            self.state[self._get_store(player)] += self.state[self._get_opp_index(current,player)]+1
-            self.state[self._get_opp_index(current,player)] = 0
-            self.state[current] = 0
+        if state[current] == 1 and current[0] == player-1:
+            state[self._get_store(player)] += state[self._get_opp_index(current,player)]+1
+            state[self._get_opp_index(current,player)] = 0
+            state[current] = 0
         
-        return 3-player
+        return state, 3-player
 
-    def print(self):
+    def print(self, state = None):
+        if state is None:
+            state = self.state.copy()
+
         # First row
         temp = "{:>5d} - "
         for i in range(self.pits):
